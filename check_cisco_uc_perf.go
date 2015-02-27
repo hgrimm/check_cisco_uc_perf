@@ -1,5 +1,5 @@
 // 	file: check_cisco_uc_perf.go
-// 	Version 0.3.1 (27.02.2015)
+// 	Version 0.3.2 (27.02.2015)
 //
 // check_cisco_uc_perf is a Nagios plugin made by Herwig Grimm (herwig.grimm at aon.at)
 // to monitor the performance Cisco Unified Communications Servers.
@@ -34,6 +34,7 @@
 //		Version 0.2 (20.05.2014) object caching added. new func loadStruct and saveStruct
 //		Version 0.3 (27.02.2015) General Public Licence added
 //		Version 0.3.1 (27.02.2015) new flag -m maximum cache age in seconds and flag -a and flag -A Cisco AXL API version of AXL XML Namespace
+//		Version 0.3.2 (27.02.2015) changed flag -H usage description
 package main
 
 import (
@@ -57,7 +58,7 @@ import (
 
 const (
 	outputPrefix = "UC Perfmon"
-	version      = "0.3.1"
+	version      = "0.3.2"
 	tmpSubdir    = "/check_cisco_uc_perf_cache/check_cisco_uc_perf_"
 )
 
@@ -271,7 +272,7 @@ func returnValText(returnVal int) string {
 }
 
 func init() {
-	flag.StringVar(&ipAddr, "H", "", "CUCM IP address")
+	flag.StringVar(&ipAddr, "H", "", "AXL server IP address")
 	flag.StringVar(&nodeIpAddr, "N", "", "Node IP address")
 	flag.StringVar(&username, "u", "", "username")
 	flag.StringVar(&password, "p", "", "password")
