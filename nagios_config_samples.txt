@@ -1,0 +1,500 @@
+Nagios Config Samples for check_cisco_ucm_perf Version 0.3
+----------------------------------------------------------
+Herwig Grimm, 27.02.2015
+
+define command{
+        command_name    check_cisco_ucm_perf
+        command_line    $USER1$/check_cisco_ucm_perf -H 10.99.1.100 -N $HOSTADDRESS$ -u $USER5$ -p $USER6$ -o '$ARG1$' -n '$ARG2$' -w $ARG3$ -c $ARG4$ 
+}
+
+define service{
+        use                             generic-service,service-pnp
+        hostgroup_name                  CUCM-PUB
+        service_description             CUCM Perf AXL ThrottleCount
+        check_command                   check_cisco_ucm_perf!Cisco AXL Web Service!ThrottleCount!1!10
+        servicegroups                   cucm-perf
+        notifications_enabled           0
+}
+
+define service{
+        use                             generic-service,service-pnp
+        hostgroup_name                  CUCM-PUB,CUCM-TFTP-MOH,CUCM-SUB-1,CUCM-SUB-2
+        service_description             CUCM Perf CallManager Code Red
+        check_command                   check_cisco_ucm_perf!Cisco CallManager System Performance!CodeRedEntryExit!0:0!0:0
+        servicegroups                   cucm-perf
+        notifications_enabled           0
+}
+
+define service{
+        use                             generic-service,service-pnp
+        hostgroup_name                  CUCM-PUB,CUCM-TFTP-MOH,CUCM-SUB-1,CUCM-SUB-2
+        service_description             CUCM Perf CallManager Code Yellow
+        check_command                   check_cisco_ucm_perf!Cisco CallManager System Performance!CodeYellowEntryExit!0:0!0:0
+        servicegroups                   cucm-perf
+        notifications_enabled           0
+}
+
+define service{
+        use                             generic-service,service-pnp
+        hostgroup_name                  CUCM-PUB
+        service_description             CUCM Perf CAR DB SpaceUsed 
+        check_command                   check_cisco_ucm_perf!Cisco CAR DB(CAR_DB_Perfmon_Instance)!CARDBSpaceUsed!80!90
+        servicegroups                   cucm-perf
+        notifications_enabled           0
+}
+
+define service{
+        use                             generic-service,service-pnp
+        hostgroup_name                       CUCM-PUB
+        service_description             CUCM Perf AXL SessionsActive
+        check_command                   check_cisco_ucm_perf!Cisco Tomcat Web Application(axl)!SessionsActive!2000!2500
+        servicegroups                       cucm-perf
+        notifications_enabled           0
+}
+
+
+define service{
+        use                             generic-service,service-pnp
+        hostgroup_name                  CUCM-PUB,CUCM-TFTP-MOH,CUCM-SUB-1,CUCM-SUB-2
+        service_description             CUCM Perf DB Replication State
+        check_command                   check_cisco_ucm_perf!Number of Replicates Created and State of Replication(ReplicateCount)!Replicate_State!2:2!2:2
+        servicegroups                   cucm-perf
+        notifications_enabled           0
+}
+
+define service{
+        use                             generic-service,service-pnp
+        hostgroup_name                  CUCM-PUB,CUCM-TFTP-MOH,CUCM-SUB-1,CUCM-SUB-2
+        service_description             CUCM Perf Process tomcat CPU Time
+        check_command                   check_cisco_ucm_perf!Process(tomcat)!% CPU Time!70!90
+        servicegroups                   cucm-perf
+        notifications_enabled           0
+}
+
+define service{
+        use                             generic-service,service-pnp
+        hostgroup_name                  CUCM-TFTP-MOH
+        service_description             CUCM Perf Process kipvmsd CPU Time
+        check_command                   check_cisco_ucm_perf!Process(kipvmsd)!% CPU Time!70!90
+        servicegroups                   cucm-perf
+        notifications_enabled           0
+}
+
+
+define service{
+        use                             generic-service,service-pnp
+        hostgroup_name                  CUCM-SUB-1,CUCM-SUB-2
+        service_description             CUCM Perf Process ccm CPU Time
+        check_command                   check_cisco_ucm_perf!Process(ccm)!% CPU Time!70!90
+        servicegroups                   cucm-perf
+        notifications_enabled           0
+}
+
+define service{
+        use                             generic-service,service-pnp
+        hostgroup_name                  CUCM-SUB-1,CUCM-SUB-2
+        service_description             CUCM Perf Process CTIManager CPU Time
+        check_command                   check_cisco_ucm_perf!Process(CTIManager)!% CPU Time!70!90
+        servicegroups                   cucm-perf
+        notifications_enabled           0
+}
+
+define service{
+        use                             generic-service,service-pnp
+        hostgroup_name                  CUCM-PUB,CUCM-TFTP-MOH,CUCM-SUB-1,CUCM-SUB-2
+        service_description             CUCM Perf Memory Usage
+        check_command                   check_cisco_ucm_perf!Memory!% Mem Used!70!90
+        servicegroups                   cucm-perf
+        notifications_enabled           0
+}
+
+define service{
+        use                             generic-service,service-pnp
+        hostgroup_name                  CUCM-PUB,CUCM-TFTP-MOH,CUCM-SUB-1,CUCM-SUB-2
+        service_description             CUCM Perf Memory Page Usage
+        check_command                   check_cisco_ucm_perf!Memory!% Page Usage!93!96
+        servicegroups                   cucm-perf
+        notifications_enabled           0
+}
+
+define service{
+        use                             generic-service,service-pnp
+        hostgroup_name                  CUCM-PUB,CUCM-TFTP-MOH,CUCM-SUB-1,CUCM-SUB-2
+        service_description             CUCM Perf Memory VM Usage
+        check_command                   check_cisco_ucm_perf!Memory!% VM Used!70!90
+        servicegroups                   cucm-perf
+        notifications_enabled           0
+}
+
+define service{
+        use                             generic-service,service-pnp
+        hostgroup_name                  CUCM-PUB,CUCM-TFTP-MOH,CUCM-SUB-1,CUCM-SUB-2
+        service_description             CUCM Perf Partition Active
+        check_command                   check_cisco_ucm_perf!Partition(Active)!% Used!80!90
+        servicegroups                   cucm-perf
+        notifications_enabled           0
+}
+
+define service{
+        use                             generic-service,service-pnp
+        hostgroup_name                  CUCM-PUB,CUCM-TFTP-MOH,CUCM-SUB-1,CUCM-SUB-2
+        service_description             CUCM Perf Partition Common
+        check_command                   check_cisco_ucm_perf!Partition(Common)!% Used!80!90
+        servicegroups                   cucm-perf
+        notifications_enabled           0
+}
+
+define service{
+        use                             generic-service,service-pnp
+        hostgroup_name                  CUCM-PUB,CUCM-TFTP-MOH,CUCM-SUB-1,CUCM-SUB-2
+        service_description             CUCM Perf Partition Inactive
+        check_command                   check_cisco_ucm_perf!Partition(Inactive)!% Used!80!90
+        servicegroups                   cucm-perf
+        notifications_enabled           0
+}
+
+define service{
+        use                             generic-service,service-pnp
+        hostgroup_name                  CUCM-SUB-1
+        service_description             CUCM Perf Extension Mobility Requests in Progress
+        check_command                   check_cisco_ucm_perf!Cisco Extension Mobility!Requests In Progress!0:!0:
+        servicegroups                   cucm-perf
+        notifications_enabled           0
+}
+
+define service{
+        use                             generic-service,service-pnp
+        hostgroup_name                  CUCM-SUB-1
+        service_description             CUCM Perf Extension Mobility Requests Throttled
+        check_command                   check_cisco_ucm_perf!Cisco Extension Mobility!Requests Throttled!0:0!0:0
+        servicegroups                   cucm-perf
+        notifications_enabled           0
+}
+
+define service{
+        use                             generic-service,service-pnp
+        hostgroup_name                  CUCM-SUB-1
+        service_description             CUCM Perf Extension Mobility Requests Total 
+        check_command                   check_cisco_ucm_perf!Cisco Extension Mobility!Total Attempted Login\/Logout Requests!0:!0:
+        servicegroups                   cucm-perf
+        notifications_enabled           0
+}
+
+define service{
+        use                             generic-service,service-pnp
+        hostgroup_name                  CUCM-SUB-1
+        service_description             CUCM Perf MGCP In Service E1 ISDN 25077 Num1
+        check_command                   check_cisco_ucm_perf!Cisco MGCP PRI Device(vpvgca01.vu-wien.ac.at::S0_SU0_DS1-0)!DatalinkInService!1:1!1:1
+        servicegroups                   cucm-perf
+        notifications_enabled           0
+}
+
+define service{
+        use                             generic-service,service-pnp
+        hostgroup_name                  CUCM-SUB-1
+        service_description             CUCM Perf Calls Active E1 ISDN 25077 Num1 
+        check_command                   check_cisco_ucm_perf!Cisco MGCP PRI Device(vpvgca01.vu-wien.ac.at::S0_SU0_DS1-0)!CallsActive!0:!0:
+        servicegroups                   cucm-perf
+        notifications_enabled           0
+}
+
+define service{
+        use                             generic-service,service-pnp
+        hostgroup_name                       CUCM-SUB-1
+        service_description             CUCM Perf MGCP In Service E1 ISDN 25077 Num2 
+        check_command                   check_cisco_ucm_perf!Cisco MGCP PRI Device(vpvgca02.vu-wien.ac.at::S0_SU0_DS1-0)!DatalinkInService!1:1!1:1
+        servicegroups                   cucm-perf
+        notifications_enabled           0
+}
+
+define service{
+        use                             generic-service,service-pnp
+        hostgroup_name                  CUCM-SUB-1
+        service_description             CUCM Perf Calls Active E1 ISDN 25077 Num2 
+        check_command                   check_cisco_ucm_perf!Cisco MGCP PRI Device(vpvgca02.vu-wien.ac.at::S0_SU0_DS1-0)!CallsActive!0:!0:
+        servicegroups                   cucm-perf
+        notifications_enabled           0
+}
+
+define service{
+        use                             generic-service,service-pnp
+        hostgroup_name                  CUCM-SUB-1
+        service_description             CUCM Perf MGCP In Service E1 Directlink 
+        check_command                   check_cisco_ucm_perf!Cisco MGCP PRI Device(vpvgca02.vu-wien.ac.at::S0_SU0_DS1-1)!DatalinkInService!1:1!1:1
+        servicegroups                   cucm-perf
+        notifications_enabled           0
+}
+
+
+
+define service{
+        use                             generic-service,service-pnp
+        hostgroup_name                  CUCM-SUB-1
+        service_description             CUCM Perf Calls Active E1 Directlink
+        check_command                   check_cisco_ucm_perf!Cisco MGCP PRI Device(vpvgca02.vu-wien.ac.at::S0_SU0_DS1-1)!CallsActive!0:!0:
+        servicegroups                   cucm-perf
+        notifications_enabled           0
+}
+
+
+define service{
+        use                             generic-service,service-pnp
+        hostgroup_name                  CUCM-SUB-1
+        service_description             CUCM Perf Presence Active Trunk Subscriptions
+        check_command                   check_cisco_ucm_perf!Cisco Presence Features!ActiveCallListAndTrunkSubscriptions!500!1000
+        servicegroups                   cucm-perf
+        notifications_enabled           0
+}
+
+
+define service{
+        use                             generic-service,service-pnp
+        hostgroup_name                  CUCM-SUB-1
+        service_description             CUCM Perf Presence Active Subscriptions
+        check_command                   check_cisco_ucm_perf!Cisco Presence Features!ActiveSubscriptions!2000!3000
+        servicegroups                   cucm-perf
+        notifications_enabled           0
+}
+
+define service{
+        use                             generic-service,service-pnp
+        hostgroup_name                  CUCM-SUB-1
+        service_description             CUCM Perf Calls Active SIP 1unified 
+        check_command                   check_cisco_ucm_perf!Cisco SIP(1unified)!CallsActive!20!30
+        servicegroups                   cucm-perf
+        notifications_enabled           0
+}
+
+define service{
+        use                             generic-service,service-pnp
+        hostgroup_name                  CUCM-SUB-1
+        service_description             CUCM Perf Calls Active SIP Netwise_Audio 
+        check_command                   check_cisco_ucm_perf!Cisco SIP(Netwise_Audio)!CallsActive!20!30
+        servicegroups                   cucm-perf
+        notifications_enabled           0
+}
+
+
+
+define service{
+        use                             generic-service,service-pnp
+        hostgroup_name                  CUCM-SUB-2
+        service_description             CUCM Perf SIP Normalization SIP_Skype Error Execution
+        check_command                   check_cisco_ucm_perf!Cisco SIP Normalization(SIP_Skype)!ErrorExecution!0:0!0:0
+        servicegroups                   cucm-perf
+        notifications_enabled           0
+}
+
+define service{
+        use                             generic-service,service-pnp
+        hostgroup_name                  CUCM-SUB-2
+        service_description             CUCM Perf SIP Normalization SIP_Skype Memory Usage
+        check_command                   check_cisco_ucm_perf!Cisco SIP Normalization(SIP_Skype)!MemoryUsagePercentage!70!90
+        servicegroups                   cucm-perf
+        notifications_enabled           0
+}
+
+define service{
+        use                             generic-service,service-pnp
+        hostgroup_name                  CUCM-SUB-1
+        service_description             CUCM Perf Media MOH Unicast Active
+        check_command                   check_cisco_ucm_perf!Cisco CallManager!MOHUnicastResourceActive!0:!0:
+        servicegroups                   cucm-perf
+        notifications_enabled           0
+}
+
+
+define service{
+        use                             generic-service,service-pnp
+        host_name                       VPCUCM03
+        service_description             CUCM Perf Media MOH Unicast Available
+        check_command                   check_cisco_ucm_perf!Cisco CallManager!MOHUnicastResourceAvailable!10:!5:
+        servicegroups                   cucm-perf
+        notifications_enabled           0
+}
+
+define service{
+        use                             generic-service,service-pnp
+        hostgroup_name                  CUCM-SUB-1
+        service_description             CUCM Perf Media Annunciator Active
+        check_command                   check_cisco_ucm_perf!Cisco CallManager!AnnunciatorResourceActive!0:!0:
+        servicegroups                   cucm-perf
+        notifications_enabled           0
+}
+
+
+define service{
+        use                             generic-service,service-pnp
+        host_name                       VPCUCM03
+        service_description             CUCM Perf Media Annunciator Available
+        check_command                   check_cisco_ucm_perf!Cisco CallManager!AnnunciatorResourceAvailable!10:!5:
+        servicegroups                   cucm-perf
+        notifications_enabled           0
+}
+
+define service{
+        use                             generic-service,service-pnp
+        hostgroup_name                  CUCM-SUB-1
+        service_description             CUCM Perf Media HW Conference Active
+        check_command                   check_cisco_ucm_perf!Cisco CallManager!HWConferenceResourceActive!0:0!0:0
+        servicegroups                   cucm-perf
+        notifications_enabled           0
+}
+
+
+define service{
+        use                             generic-service,service-pnp
+        host_name                       VPCUCM03
+        service_description             CUCM Perf Media HW Conference Available
+        check_command                   check_cisco_ucm_perf!Cisco CallManager!HWConferenceResourceAvailable!0:0!0:0
+        servicegroups                   cucm-perf
+        notifications_enabled           0
+}
+
+define service{
+        use                             generic-service,service-pnp
+        hostgroup_name                  CUCM-SUB-1
+        service_description             CUCM Perf Media SW Conference Active
+        check_command                   check_cisco_ucm_perf!Cisco CallManager!SWConferenceResourceActive!0:!0:
+        servicegroups                   cucm-perf
+        notifications_enabled           0
+}
+
+
+define service{
+        use                             generic-service,service-pnp
+        host_name                       VPCUCM03
+        service_description             CUCM Perf Media SW Conference Available
+        check_command                   check_cisco_ucm_perf!Cisco CallManager!SWConferenceResourceAvailable!10:!5:
+        servicegroups                   cucm-perf
+        notifications_enabled           0
+}
+
+define service{
+        use                             generic-service,service-pnp
+        hostgroup_name                  CUCM-SUB-1
+        service_description             CUCM Perf Media Transcoder Active
+        check_command                   check_cisco_ucm_perf!Cisco CallManager!TranscoderResourceActive!0:0!0:0
+        servicegroups                   cucm-perf
+        notifications_enabled           0
+}
+
+define service{
+        use                             generic-service,service-pnp
+        host_name                       VPCUCM03
+        service_description             CUCM Perf Media Transcoder Available
+        check_command                   check_cisco_ucm_perf!Cisco CallManager!TranscoderResourceAvailable!0:0!0:0
+        servicegroups                   cucm-perf
+        notifications_enabled           0
+}
+
+define service{
+        use                             generic-service,service-pnp
+        hostgroup_name                  CUCM-SUB-1
+        service_description             CUCM Perf Media MTP Active
+        check_command                   check_cisco_ucm_perf!Cisco CallManager!MTPResourceActive!0:!0:
+        servicegroups                   cucm-perf
+        notifications_enabled           0
+}
+
+
+define service{
+        use                             generic-service,service-pnp
+        host_name                       VPCUCM03
+        service_description             CUCM Perf Media MTP Available
+        check_command                   check_cisco_ucm_perf!Cisco CallManager!MTPResourceAvailable!10:!5:
+        servicegroups                   cucm-perf
+        notifications_enabled           0
+}
+
+define service{
+        use                             generic-service,service-pnp
+        hostgroup_name                  CUCM-SUB-1,CUCM-SUB-2
+        service_description             CUCM Perf Locations Out Of Resources
+        check_command                   check_cisco_ucm_perf!Cisco CallManager!LocationOutOfResources!0:0!0:0
+        servicegroups                   cucm-perf
+        notifications_enabled           0
+}
+
+define service{
+        use                             generic-service,service-pnp
+        hostgroup_name                  CUCM-SUB-1,CUCM-SUB-2
+        service_description             CUCM Perf Calls Active
+        check_command                   check_cisco_ucm_perf!Cisco CallManager!CallsActive!0:!0:
+        servicegroups                   cucm-perf
+        notifications_enabled           0
+}
+
+define service{
+        use                             generic-service,service-pnp
+        hostgroup_name                  CUCM-SUB-1,CUCM-SUB-2
+        service_description             CUCM Perf Calls Video Active
+        check_command                   check_cisco_ucm_perf!Cisco CallManager!VideoCallsActive!0:!0:
+        servicegroups                   cucm-perf
+        notifications_enabled           0
+}
+
+define service{
+        use                             generic-service,service-pnp
+        hostgroup_name                  CUCM-SUB-1,CUCM-SUB-2
+        service_description             CUCM Perf Calls In Progress
+        check_command                   check_cisco_ucm_perf!Cisco CallManager!CallsInProgress!0:!0:
+        servicegroups                   cucm-perf
+        notifications_enabled           0
+}
+
+define service{
+        use                             generic-service,service-pnp
+        hostgroup_name                  CUCM-SUB-1,CUCM-SUB-2
+        service_description             CUCM Perf Registered Other Station Devices
+        check_command                   check_cisco_ucm_perf!Cisco CallManager!RegisteredOtherStationDevices!0:!0:
+        servicegroups                   cucm-perf
+        notifications_enabled           0
+}
+
+define service{
+        use                             generic-service,service-pnp
+        hostgroup_name                  CUCM-SUB-1,CUCM-SUB-2
+        service_description             CUCM Perf Registered Hardware Phones
+        check_command                   check_cisco_ucm_perf!Cisco CallManager!RegisteredHardwarePhones!0:!0:
+        servicegroups                   cucm-perf
+        notifications_enabled           0
+}
+
+define service{
+        use                             generic-service,service-pnp
+        hostgroup_name                  CUCM-SUB-1,CUCM-SUB-2
+        service_description             CUCM Perf Registered MGCP Gateways
+        check_command                   check_cisco_ucm_perf!Cisco CallManager!RegisteredMGCPGateway!0:!0:
+        servicegroups                   cucm-perf
+        notifications_enabled           0
+}
+
+define service{
+        use                             generic-service,service-pnp
+        hostgroup_name                  CUCM-SUB-1,CUCM-SUB-2
+        service_description             CUCM Perf Registered Partially Phones
+        check_command                   check_cisco_ucm_perf!Cisco CallManager!PartiallyRegisteredPhone!1!5
+        servicegroups                   cucm-perf
+        notifications_enabled           0
+}
+
+define service{
+        use                             generic-service,service-pnp
+        hostgroup_name                  CUCM-SUB-1,CUCM-SUB-2
+        service_description             CUCM Perf CTI Connections Active
+        check_command                   check_cisco_ucm_perf!Cisco CTI Manager!CTIConnectionActive!0:!0:
+        servicegroups                   cucm-perf
+        notifications_enabled           0
+}
+
+define service{
+        use                             generic-service,service-pnp
+        hostgroup_name                  CUCM-SUB-1,CUCM-SUB-2
+        service_description             CUCM Perf CTI Lines Open
+        check_command                   check_cisco_ucm_perf!Cisco CTI Manager!LinesOpen!0:!0:
+        servicegroups                   cucm-perf
+        notifications_enabled           0
+}
+
+
