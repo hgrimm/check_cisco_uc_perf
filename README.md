@@ -35,15 +35,27 @@ General Public Licence (see http://www.fsf.org/licensing/licenses/gpl.txt).
 
 # Usage
   -A="apiVersion": Cisco AXL API version of AXL XML Namespace
+  
   -H="": AXL server IP address
+  
   -N="": Node IP address
+  
   -V=false: print plugin version
+  
   -c="1": Critical threshold or threshold range
+  
   -d=0: print debug, level: 1 errors only, 2 warnings and 3 informational messages
+  
   -l=false: print PerfmonListCounter
+  
   -m=180: maximum cache age in seconds
+  
   -n="": Counter name
+  
   -o="Memory": Perfmon object with optional tailing instance names in parenthesis
+  
   -p="": password
+  
   -u="": username
+  
   -w="1": Warning threshold or threshold range
