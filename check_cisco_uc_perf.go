@@ -1,8 +1,8 @@
 // 	file: check_cisco_uc_perf.go
-// 	Version 0.3 (27.02.2015)
+// 	Version 0.3.1 (27.02.2015)
 //
 // check_cisco_uc_perf is a Nagios plugin made by Herwig Grimm (herwig.grimm at aon.at)
-// to monitor the performance Cisco Unified Communications Manager CUCM.
+// to monitor the performance Cisco Unified Communications Servers.
 //
 // I have used the Google Go programming language because of no need to install
 // any libraries.
@@ -12,6 +12,15 @@
 // This nagios plugin is free software, and comes with ABSOLUTELY NO WARRANTY.
 // It may be used, redistributed and/or modified under the terms of the GNU
 // General Public Licence (see http://www.fsf.org/licensing/licenses/gpl.txt).
+//
+// log files and cache file:
+//  		befor first use create the following log files and cache file
+//  		touch /var/log/check_cisco_uc_perf.log
+//  		chown nagios.nagios /var/log/check_cisco_uc_perf.log
+//
+//  		mkdir /tmp/check_cisco_uc_perf_cache
+//  		chown nagios.nagios  /tmp/check_cisco_uc_perf_cache
+//
 //
 // tested with: 	Cisco Unified Communications Manager CUCM version 9.1.2.11900-12
 // 					Cisco Unified Communications Manager CUCM version 8.6.2.22900-9
@@ -24,7 +33,7 @@
 //		Version 0.1 (15.05.2014) initial release
 //		Version 0.2 (20.05.2014) object caching added. new func loadStruct and saveStruct
 //		Version 0.3 (27.02.2015) General Public Licence added
-
+//		Version 0.3.1 (27.02.2015) new flag -m maximum cache age in seconds and flag -a and flag -A Cisco AXL API version of AXL XML Namespace
 package main
 
 import (
@@ -47,10 +56,9 @@ import (
 )
 
 const (
-	outputPrefix = "CUCM Perfmon"
-	version      = "0.3"
-	tmpSubdir    = "/check_cucm_perf_cache/check_cucm_perf_"
-	maxCacheAge  = 180 // max cache age is 3 minutes
+	outputPrefix = "UC Perfmon"
+	version      = "0.3.1"
+	tmpSubdir    = "/check_cisco_uc_perf_cache/check_cisco_uc_perf_"
 )
 
 type (
@@ -127,6 +135,8 @@ var (
 	criticalThreshold string
 	showVersion       bool
 	showCounters      bool
+	maxCacheAge       int64
+	apiVersion        string
 )
 
 func debugPrintf(level int, format string, a ...interface{}) {
@@ -272,11 +282,13 @@ func init() {
 	flag.StringVar(&criticalThreshold, "c", "1", "Critical threshold or threshold range")
 	flag.BoolVar(&showVersion, "V", false, "print plugin version")
 	flag.BoolVar(&showCounters, "l", false, "print PerfmonListCounter")
+	flag.Int64Var(&maxCacheAge, "m", 180, "maximum cache age in seconds")
+	flag.StringVar(&apiVersion, "A", "9.0", "Cisco AXL API version of AXL XML Namespace")
 }
 
 func main() {
 
-	logfile, err := os.OpenFile("/var/log/check_cucm_perf.log", os.O_RDWR|os.O_CREATE|os.O_APPEND, 0666)
+	logfile, err := os.OpenFile("/var/log/check_cisco_uc_perf.log", os.O_RDWR|os.O_CREATE|os.O_APPEND, 0666)
 	if err != nil {
 		debugPrintf(2, "Can't open log file\n")
 		os.Exit(3)
@@ -370,7 +382,7 @@ func main() {
 		debugPrintf(3, "URL: %s\n", url)
 		req, err := http.NewRequest("POST", url, data)
 		req.Header.Add("Content-type", "text/xml")
-		req.Header.Add("SOAPAction", "CUCM:DB ver=9.0")
+		req.Header.Add("SOAPAction", "CUCM:DB ver="+apiVersion)
 		req.SetBasicAuth(username, password)
 
 		resp, err := client.Do(req)
