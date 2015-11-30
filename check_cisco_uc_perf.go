@@ -1,5 +1,5 @@
 // 	file: check_cisco_uc_perf.go
-// 	Version 0.3.2 (27.02.2015)
+// 	Version 0.3.3 (30.11.2015)
 //
 // check_cisco_uc_perf is a Nagios plugin made by Herwig Grimm (herwig.grimm at aon.at)
 // to monitor the performance Cisco Unified Communications Servers.
@@ -22,8 +22,10 @@
 //  		chown nagios.nagios  /tmp/check_cisco_uc_perf_cache
 //
 //
-// tested with: 	Cisco Unified Communications Manager CUCM version 9.1.2.11900-12
-// 					Cisco Unified Communications Manager CUCM version 8.6.2.22900-9
+// tested with:
+// 			Cisco Unified Communications Manager CUCM version 8.6.2.22900-9
+//			Cisco Unified Communications Manager CUCM version 9.1.2.11900-12
+//			Cisco Unified Communications Manager CUCM version 11.0.1.20000-2
 //
 // see also:
 // 		Cisco Unified Communications Manager XML Developers Guide, Release 9.0(1)
@@ -35,6 +37,8 @@
 //		Version 0.3 (27.02.2015) General Public Licence added
 //		Version 0.3.1 (27.02.2015) new flag -m maximum cache age in seconds and flag -a and flag -A Cisco AXL API version of AXL XML Namespace
 //		Version 0.3.2 (27.02.2015) changed flag -H usage description
+//		Version 0.3.3 (30.11.2015) CUCM version 11.0: in TLSClientConfig MaxVersion set to tls.VersionTLS11 (TLS 1.1)
+
 package main
 
 import (
@@ -348,9 +352,13 @@ func main() {
 	if !usePersistData || showCounters {
 
 		client := &http.Client{
+
 			Transport: &http.Transport{
-				Proxy:           http.ProxyFromEnvironment,
-				TLSClientConfig: &tls.Config{InsecureSkipVerify: true},
+				Proxy: http.ProxyFromEnvironment,
+				TLSClientConfig: &tls.Config{
+					InsecureSkipVerify: true,
+					MaxVersion:         tls.VersionTLS11,
+				},
 			},
 		}
 
@@ -386,9 +394,11 @@ func main() {
 		req.Header.Add("SOAPAction", "CUCM:DB ver="+apiVersion)
 		req.SetBasicAuth(username, password)
 
+		debugPrintf(4, "username: %s, password: %s\n", username, password)
+
 		resp, err := client.Do(req)
 		if err != nil {
-			debugPrintf(1, "HTTPS request error: %s\n", err)
+			debugPrintf(1, "HTTPS request error: %s %#v\n", err, resp)
 			os.Exit(3)
 		}
 		defer resp.Body.Close()
