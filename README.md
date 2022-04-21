@@ -3,7 +3,7 @@ check_cisco_uc_perf is a Nagios plugin to monitor the performance of Cisco Unifi
 
 
 file: check_cisco_ucm_perf.go
-Version 0.3.2 (27.02.2015)
+Version 0.8 (21.04.2022)
 
 check_cisco_ucm_perf is a Nagios plugin made by Herwig Grimm (herwig.grimm at aon.at)
 to monitor the performance Cisco Unified Communications Manager CUCM.
@@ -36,36 +36,35 @@ General Public Licence (see http://www.fsf.org/licensing/licenses/gpl.txt).
 		...
 		Version 0.8 (21.04.2021) XML data parsing largely reworked. New argument -C to define the cache file path and new argument -L to define the log filename.
 
-# Usage
+# usage:
 
-  -A string
-        Cisco AXL API version of AXL XML Namespace (default "9.0")
-  -C string
-        Cache file path (default "/tmp/check_cisco_uc_perf/")
-  -H string
-        CUCM server IP address
-  -L string
-        Log file path and name (default "/var/log/check_cisco_uc_perf.log")
-  -M string
-        Comma separated list of nodes (IP addresses)
-  -N string
-        Node IP address
-  -V    print plugin version
-  -c string
-        Critical threshold or threshold range (default "1")
-  -d int
-        print debug, level: 1 errors only, 2 warnings and 3 informational messages
-  -l    print PerfmonListCounter
-  -m int
-        maximum cache age in seconds (default 180)
-  -n string
-        Counter name
-  -o string
-        Perfmon object with optional tailing instance names in parenthesis (default "Memory")
-  -p string
-        password
-  -u string
-        username
-  -w string
-        Warning threshold or threshold range (default "1")
-
+	-A string
+		Cisco AXL API version of AXL XML Namespace (default "9.0")
+	-C string
+		Cache file path (default "/tmp/check_cisco_uc_perf/")
+	-H string
+		CUCM server IP address
+	-L string
+		Log file path and name (default "/var/log/check_cisco_uc_perf.log")
+	-M string
+		Comma separated list of nodes (IP addresses)
+	-N string
+		Node IP address
+	-V		print plugin version
+	-c string
+		Critical threshold or threshold range (default "1")
+	-d int
+		print debug, level: 1 errors only, 2 warnings and 3 informational messages
+	-l		print PerfmonListCounter
+	-m int
+		maximum cache age in seconds (default 180)
+	-n string
+		Counter name
+	-o string
+		Perfmon object with optional tailing instance names in parenthesis (default "Memory")
+	-p string
+		password
+	-u string
+		username
+	-w string
+		Warning threshold or threshold range (default "1")
