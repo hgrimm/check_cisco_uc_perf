@@ -1,5 +1,5 @@
 // 	file: check_cisco_uc_perf.go
-// 	Version 0.3.3 (30.11.2015)
+// 	Version 0.8 (21.04.2021)
 //
 // check_cisco_uc_perf is a Nagios plugin made by Herwig Grimm (herwig.grimm at aon.at)
 // to monitor the performance Cisco Unified Communications Servers.
@@ -26,6 +26,7 @@
 // 			Cisco Unified Communications Manager CUCM version 8.6.2.22900-9
 //			Cisco Unified Communications Manager CUCM version 9.1.2.11900-12
 //			Cisco Unified Communications Manager CUCM version 11.0.1.20000-2
+//			Cisco Unified Communications Manager CUCM version 14
 //
 // see also:
 // 		Cisco Unified Communications Manager XML Developers Guide, Release 9.0(1)
@@ -38,6 +39,10 @@
 //		Version 0.3.1 (27.02.2015) new flag -m maximum cache age in seconds and flag -a and flag -A Cisco AXL API version of AXL XML Namespace
 //		Version 0.3.2 (27.02.2015) changed flag -H usage description
 //		Version 0.3.3 (30.11.2015) CUCM version 11.0: in TLSClientConfig MaxVersion set to tls.VersionTLS11 (TLS 1.1)
+//		Version 0.4 (02.02.2016) new flag -M query multiple CUCM nodes.
+//		Version 0.5 (12.03.2020) now first step: flag.Parse() and then check if logFileName is writeable
+//		...
+//		Version 0.8 (21.04.2021) XML data parsing largely reworked. New argument -C to define the cache file path and new argument -L to define the log filename.
 
 package main
 
@@ -61,9 +66,9 @@ import (
 )
 
 const (
-	outputPrefix = "UC Perfmon"
-	version      = "0.3.2"
-	tmpSubdir    = "/check_cisco_uc_perf_cache/check_cisco_uc_perf_"
+	outputPrefix     = "UC Perfmon"
+	version          = "0.8"
+	chacheFilePrefix = "check_cisco_uc_perf_"
 )
 
 type (
@@ -78,59 +83,98 @@ type (
 		Object  string   `xml:"soap:Object"`
 	}
 
-	Item struct {
-		XMLName xml.Name `xml:"item"`
-		Name    string
-		Value   string
-		CStatus string
-	}
-
-	PerfmonCollectCounterDataResponse struct {
-		XMLName xml.Name `xml:"perfmonCollectCounterDataResponse"`
-		Item    []Item   `xml:"ArrayOfCounterInfo>item"`
-	}
-
-	SoapBody struct {
-		XMLName                   xml.Name `xml:"Body"`
-		PerfmonCollectCounterData *PerfmonCollectCounterDataResponse
-	}
-
-	Envelope struct {
+	CounterEnvelope struct {
 		XMLName xml.Name `xml:"Envelope"`
-		Soap    *SoapBody
-	}
-
-	ListCounterItem struct {
-		XMLName xml.Name `xml:"item"`
-		Name    string
-	}
-
-	ListCounterObjectItem struct {
-		XMLName       xml.Name `xml:"item"`
-		Name          string
-		MultiInstance string
-		Item          []ListCounterItem `xml:"ArrayOfCounter>item"`
-	}
-
-	PerfmonListCounterResponse struct {
-		XMLName xml.Name                `xml:"perfmonListCounterResponse"`
-		Item    []ListCounterObjectItem `xml:"ArrayOfObjectInfo>item"`
-	}
-
-	ListCounterSoapBody struct {
-		XMLName                xml.Name `xml:"Body"`
-		PerfmonListCounterData *PerfmonListCounterResponse
+		Text    string   `xml:",chardata"`
+		Soapenv string   `xml:"soapenv,attr"`
+		Xsd     string   `xml:"xsd,attr"`
+		Xsi     string   `xml:"xsi,attr"`
+		Body    struct {
+			Text                              string `xml:",chardata"`
+			PerfmonCollectCounterDataResponse struct {
+				Text               string `xml:",chardata"`
+				EncodingStyle      string `xml:"encodingStyle,attr"`
+				Ns1                string `xml:"ns1,attr"`
+				ArrayOfCounterInfo struct {
+					Text               string `xml:",chardata"`
+					ArrayType          string `xml:"arrayType,attr"`
+					Type               string `xml:"type,attr"`
+					Ns2                string `xml:"ns2,attr"`
+					Soapenc            string `xml:"soapenc,attr"`
+					ArrayOfCounterInfo []struct {
+						Text string `xml:",chardata"`
+						Type string `xml:"type,attr"`
+						Name struct {
+							Text string `xml:",chardata"`
+							Type string `xml:"type,attr"`
+						} `xml:"Name"`
+						Value struct {
+							Text string `xml:",chardata"`
+							Type string `xml:"type,attr"`
+						} `xml:"Value"`
+						CStatus struct {
+							Text string `xml:",chardata"`
+							Type string `xml:"type,attr"`
+						} `xml:"CStatus"`
+					} `xml:"ArrayOfCounterInfo"`
+				} `xml:"ArrayOfCounterInfo"`
+			} `xml:"perfmonCollectCounterDataResponse"`
+		} `xml:"Body"`
 	}
 
 	ListCounterEnvelope struct {
 		XMLName xml.Name `xml:"Envelope"`
-		Soap    *ListCounterSoapBody
+		Text    string   `xml:",chardata"`
+		Soapenv string   `xml:"soapenv,attr"`
+		Xsd     string   `xml:"xsd,attr"`
+		Xsi     string   `xml:"xsi,attr"`
+		Body    struct {
+			Text                       string `xml:",chardata"`
+			PerfmonListCounterResponse struct {
+				Text              string `xml:",chardata"`
+				EncodingStyle     string `xml:"encodingStyle,attr"`
+				Ns1               string `xml:"ns1,attr"`
+				ArrayOfObjectInfo struct {
+					Text              string `xml:",chardata"`
+					ArrayType         string `xml:"arrayType,attr"`
+					Type              string `xml:"type,attr"`
+					Ns2               string `xml:"ns2,attr"`
+					Soapenc           string `xml:"soapenc,attr"`
+					ArrayOfObjectInfo []struct {
+						Text string `xml:",chardata"`
+						Type string `xml:"type,attr"`
+						Name struct {
+							Text string `xml:",chardata"`
+							Type string `xml:"type,attr"`
+						} `xml:"Name"`
+						MultiInstance struct {
+							Text string `xml:",chardata"`
+							Type string `xml:"type,attr"`
+						} `xml:"MultiInstance"`
+						ArrayOfCounter struct {
+							Text           string `xml:",chardata"`
+							ArrayType      string `xml:"arrayType,attr"`
+							Type           string `xml:"type,attr"`
+							ArrayOfCounter []struct {
+								Text string `xml:",chardata"`
+								Type string `xml:"type,attr"`
+								Name struct {
+									Text string `xml:",chardata"`
+									Type string `xml:"type,attr"`
+								} `xml:"Name"`
+							} `xml:"ArrayOfCounter"`
+						} `xml:"ArrayOfCounter"`
+					} `xml:"ArrayOfObjectInfo"`
+				} `xml:"ArrayOfObjectInfo"`
+			} `xml:"perfmonListCounterResponse"`
+		} `xml:"Body"`
 	}
 )
 
 var (
 	ipAddr            string
 	nodeIpAddr        string
+	nodesIpAddrs      string
 	username          string
 	password          string
 	objectInstance    string
@@ -142,6 +186,11 @@ var (
 	showCounters      bool
 	maxCacheAge       int64
 	apiVersion        string
+	usePersistData    bool
+	returnVal         int
+	multipeNodes      bool
+	logFileName       string
+	cacheFilePath     string
 )
 
 func debugPrintf(level int, format string, a ...interface{}) {
@@ -165,7 +214,7 @@ func isFullQualified(counterName string) bool {
 }
 
 // save struct to json file in tmp dir
-func saveStruct(ipAddr, object string, o *Envelope) bool {
+func saveStruct(ipAddr, object string, o *CounterEnvelope) bool {
 
 	itemJson, err := json.Marshal(o)
 	if err != nil {
@@ -173,7 +222,8 @@ func saveStruct(ipAddr, object string, o *Envelope) bool {
 		return false
 	}
 
-	filename := fmt.Sprintf("%s%s%d_%s_%s", os.TempDir(), tmpSubdir, os.Getuid(), ipAddr, object)
+	objectUnderscore := strings.Replace(object, " ", "_", -1)
+	filename := fmt.Sprintf("%s%s%d_%s_%s", cacheFilePath, chacheFilePrefix, os.Getuid(), ipAddr, objectUnderscore)
 
 	err = ioutil.WriteFile(filename, itemJson, 0666)
 
@@ -186,9 +236,10 @@ func saveStruct(ipAddr, object string, o *Envelope) bool {
 }
 
 // load struct from json file in tmp dir if newer than defined in ageInSeconds
-func loadStruct(ipAddr, object string, ageInSeconds int64, o *Envelope) bool {
+func loadStruct(ipAddr, object string, ageInSeconds int64, o *CounterEnvelope) bool {
 
-	filename := fmt.Sprintf("%s%s%d_%s_%s", os.TempDir(), tmpSubdir, os.Getuid(), ipAddr, object)
+	objectUnderscore := strings.Replace(object, " ", "_", -1)
+	filename := fmt.Sprintf("%s%s%d_%s_%s", cacheFilePath, chacheFilePrefix, os.Getuid(), ipAddr, objectUnderscore)
 
 	fs, err := os.Stat(filename)
 	if err != nil {
@@ -276,8 +327,9 @@ func returnValText(returnVal int) string {
 }
 
 func init() {
-	flag.StringVar(&ipAddr, "H", "", "AXL server IP address")
+	flag.StringVar(&ipAddr, "H", "", "CUCM server IP address")
 	flag.StringVar(&nodeIpAddr, "N", "", "Node IP address")
+	flag.StringVar(&nodesIpAddrs, "M", "", "Comma separated list of nodes (IP addresses)")
 	flag.StringVar(&username, "u", "", "username")
 	flag.StringVar(&password, "p", "", "password")
 	flag.StringVar(&objectInstance, "o", "Memory", "Perfmon object with optional tailing instance names in parenthesis")
@@ -289,66 +341,39 @@ func init() {
 	flag.BoolVar(&showCounters, "l", false, "print PerfmonListCounter")
 	flag.Int64Var(&maxCacheAge, "m", 180, "maximum cache age in seconds")
 	flag.StringVar(&apiVersion, "A", "9.0", "Cisco AXL API version of AXL XML Namespace")
+	flag.StringVar(&logFileName, "L", "/var/log/check_cisco_uc_perf.log", "Log file path and name")
+	flag.StringVar(&cacheFilePath, "C", "/tmp/check_cisco_uc_perf/", "Cache file path")
 }
 
-func main() {
+func queryHost(ipAddr, nodeIpAddr, object, counterName, objectInstance string) {
 
-	logfile, err := os.OpenFile("/var/log/check_cisco_uc_perf.log", os.O_RDWR|os.O_CREATE|os.O_APPEND, 0666)
-	if err != nil {
-		debugPrintf(2, "Can't open log file\n")
-		os.Exit(3)
-	}
-
-	defer logfile.Close()
-
-	flag.Parse()
-	returnVal := 3
 	fullCounterName := ""
-	usePersistData := false
 
-	if showVersion {
-		fmt.Printf("%s version: %s\n", path.Base(os.Args[0]), version)
-		os.Exit(0)
-	}
+	debugPrintf(3, "queryHost CUCM IP address: %s Node IP address: %s\n", ipAddr, nodeIpAddr)
+	debugPrintf(3, "queryHost perfmon object: %s Counter name: %s\n", object, counterName)
+	debugPrintf(3, "queryHost counter instance name: %s max cache age: %d\n", objectInstance, maxCacheAge)
 
-	// log.SetOutput(os.Stdout)
-
-	log.SetOutput(logfile)
-
-	// remove tailing instance names and parenthesis
-	object := ""
-	if pos := strings.Index(objectInstance, "("); pos != -1 {
-		object = objectInstance[:pos]
-	} else {
-		object = objectInstance
-	}
-
-	debugPrintf(3, "CUCM IP address: %s Node IP address: %s\n", ipAddr, nodeIpAddr)
-	debugPrintf(3, "Perfmon object: %s Counter name: %s\n", object, counterName)
-	debugPrintf(3, "Counter instance name: %s max cache age: %d\n", objectInstance, maxCacheAge)
-
-	envelope := new(Envelope)
-	loaded := loadStruct(nodeIpAddr, object, maxCacheAge, envelope)
+	counterEnvelope := new(CounterEnvelope)
+	loaded := loadStruct(nodeIpAddr, object, maxCacheAge, counterEnvelope)
 	if !loaded {
 		debugPrintf(3, "No persistence file found or persistence file too old\n")
 		usePersistData = false
 	} else {
-		debugPrintf(3, "Persistence file found: %+v\n", envelope)
+		debugPrintf(3, "Persistence file found: %+v\n", counterEnvelope)
 		if isFullQualified(counterName) {
 			fullCounterName = counterName
 		} else {
 			fullCounterName = fmt.Sprintf("\\\\%s\\%s\\%s", nodeIpAddr, object, counterName)
 		}
-		for _, v := range envelope.Soap.PerfmonCollectCounterData.Item {
-			if v.Name == fullCounterName {
-				debugPrintf(3, "Name: %s Value: %s\n", v.Name, v.Value)
+		for _, v := range counterEnvelope.Body.PerfmonCollectCounterDataResponse.ArrayOfCounterInfo.ArrayOfCounterInfo {
+			if v.Name.Text == fullCounterName {
+				debugPrintf(3, "Name: %s Value: %s\n", v.Name.Text, v.Value.Text)
 			}
 		}
 		usePersistData = true
 	}
 
 	debugPrintf(3, "use persistence: %v\n", usePersistData)
-
 	if !usePersistData || showCounters {
 
 		client := &http.Client{
@@ -383,7 +408,7 @@ func main() {
 
 		xml_all := fmt.Sprintf("%s%s%s", xml_header, xml_data, xml_footer)
 
-		debugPrintf(4, "XMP SOAP request: %s\n", xml_all)
+		debugPrintf(3, "XML SOAP request: %s\n", xml_all)
 
 		data := bytes.NewBufferString(xml_all)
 
@@ -394,7 +419,7 @@ func main() {
 		req.Header.Add("SOAPAction", "CUCM:DB ver="+apiVersion)
 		req.SetBasicAuth(username, password)
 
-		debugPrintf(4, "username: %s, password: %s\n", username, password)
+		debugPrintf(3, "username: %s, password: %s\n", username, password)
 
 		resp, err := client.Do(req)
 		if err != nil {
@@ -404,34 +429,39 @@ func main() {
 		defer resp.Body.Close()
 		body, _ := ioutil.ReadAll(resp.Body)
 
-		debugPrintf(4, "XMP SOAP response: %s\n", body)
+		debugPrintf(3, "XML SOAP response: %s\n", body)
 
 		if showCounters {
-			envelope := new(ListCounterEnvelope)
-			err = xml.Unmarshal([]byte(body), envelope)
+
+			listCounterEnvelope := new(ListCounterEnvelope)
+			err = xml.Unmarshal([]byte(body), listCounterEnvelope)
 			if err != nil {
 				debugPrintf(1, "ListCounterEnvelope XML unmarshal error: %s\n", err)
 				os.Exit(3)
 			}
 
-			fmt.Printf("%d items\n", len(envelope.Soap.PerfmonListCounterData.Item))
+			debugPrintf(3, "PerfmonListCounterData: %+v\n", listCounterEnvelope.Body)
 
-			for _, v := range envelope.Soap.PerfmonListCounterData.Item {
-				fmt.Printf("%v\n", v.Name)
-				for _, c := range v.Item {
-					fmt.Printf("\t%s\n", c.Name)
+			fmt.Printf("%d items\n", len(listCounterEnvelope.Body.PerfmonListCounterResponse.ArrayOfObjectInfo.ArrayOfObjectInfo))
+
+			for _, v := range listCounterEnvelope.Body.PerfmonListCounterResponse.ArrayOfObjectInfo.ArrayOfObjectInfo {
+				fmt.Printf("%v\n", v.Name.Text)
+				for _, c := range v.ArrayOfCounter.ArrayOfCounter {
+					fmt.Printf("\t%s\n", c.Name.Text)
 				}
 			}
+
 			os.Exit(0)
 		}
 
-		// envelope := new(Envelope)
-		err = xml.Unmarshal([]byte(body), envelope)
+		counterEnvelope = new(CounterEnvelope)
+		err = xml.Unmarshal([]byte(body), counterEnvelope)
 		if err != nil {
 			debugPrintf(1, "XML unmarshal error: %s\n", err)
 			os.Exit(3)
 		}
-		saveStruct(nodeIpAddr, object, envelope)
+		saveStruct(nodeIpAddr, object, counterEnvelope)
+
 	}
 
 	if len(counterName) > 0 {
@@ -441,10 +471,12 @@ func main() {
 			fullCounterName = fmt.Sprintf("\\\\%s\\%s\\%s", nodeIpAddr, objectInstance, counterName)
 		}
 		debugPrintf(3, "fullCounterName: >>%s<<\n", fullCounterName)
-		for _, v := range envelope.Soap.PerfmonCollectCounterData.Item {
-			if v.Name == fullCounterName {
+		debugPrintf(3, "envelope.Body.perfmonCollectCounterDataResponse: %+v\n", counterEnvelope)
 
-				value, err := strconv.ParseFloat(v.Value, 64)
+		for _, v := range counterEnvelope.Body.PerfmonCollectCounterDataResponse.ArrayOfCounterInfo.ArrayOfCounterInfo {
+			if v.Name.Text == fullCounterName {
+
+				value, err := strconv.ParseFloat(v.Value.Text, 64)
 				if err != nil {
 					debugPrintf(1, "Counter value string to float64 convert error: %s\n", err)
 					os.Exit(3)
@@ -453,7 +485,7 @@ func main() {
 				debugPrintf(3, "returnVal: %d\n", returnVal)
 				statusStr := returnValText(returnVal)
 
-				nagiosOutput := fmt.Sprintf("%s - %s,%s,%s=%s|%s=%s;%s;%s;;", statusStr, outputPrefix, objectInstance, counterName, v.Value, counterName, v.Value, warningThreshold, criticalThreshold)
+				nagiosOutput := fmt.Sprintf("%s - %s,%s,%s=%s|%s=%s;%s;%s;;", statusStr, outputPrefix, objectInstance, counterName, v.Value.Text, counterName, v.Value.Text, warningThreshold, criticalThreshold)
 				nagiosOutput = html.EscapeString(nagiosOutput)
 				nagiosOutput = strings.Replace(nagiosOutput, "%", "Percent", -1)
 				nagiosOutput = strings.Replace(nagiosOutput, "\\", "\\\\", -1)
@@ -463,24 +495,66 @@ func main() {
 		}
 		returnVal := 3
 		statusStr := returnValText(returnVal)
-		fmt.Printf("%s - Counter not found: %s\n", statusStr, fullCounterName)
-		os.Exit(returnVal)
-
-	} else {
-		// find longest Name
-		max_len := 0
-		for _, v := range envelope.Soap.PerfmonCollectCounterData.Item {
-			if l := len(v.Name); l > max_len {
-				max_len = l
-			}
-		}
-
-		for _, v := range envelope.Soap.PerfmonCollectCounterData.Item {
-			space := strings.Repeat(" ", max_len+3-len(v.Name))
-			fmt.Printf("Name: %s%sValue: %s\n", v.Name, space, v.Value)
-
+		if multipeNodes {
+			debugPrintf(3, "%s - Counter not found: %s\n", statusStr, fullCounterName)
+		} else {
+			fmt.Printf("%s - Counter not found: %s\n", statusStr, fullCounterName)
+			os.Exit(returnVal)
 		}
 
 	}
 
 }
+
+func main() {
+
+	flag.Parse()
+
+	logfile, err := os.OpenFile(logFileName, os.O_RDWR|os.O_CREATE|os.O_APPEND, 0666)
+	if err != nil {
+		debugPrintf(1, fmt.Sprintf("Can't open log file: %s\n", logFileName))
+		os.Exit(3)
+	}
+
+	defer logfile.Close()
+
+	returnVal = 3
+	multipeNodes = false
+	usePersistData = false
+
+	if showVersion {
+		fmt.Printf("%s version: %s\n", path.Base(os.Args[0]), version)
+		os.Exit(0)
+	}
+
+	log.SetOutput(os.Stdout)
+
+	// log.SetOutput(logfile)
+
+	// remove tailing instance names and parenthesis
+	object := ""
+	if pos := strings.Index(objectInstance, "("); pos != -1 {
+		object = objectInstance[:pos]
+	} else {
+		object = objectInstance
+	}
+
+	nodes := strings.Split(nodesIpAddrs, ",")
+
+	if len(nodes) > 1 {
+		multipeNodes = true
+		debugPrintf(3, "multiple nodes: %v\n", nodes)
+	}
+
+	debugPrintf(3, "use multipe nodes: %v\n", multipeNodes)
+
+	if multipeNodes {
+		for _, nodeIpAddr = range nodes {
+			queryHost(ipAddr, nodeIpAddr, object, counterName, objectInstance)
+		}
+	} else {
+		queryHost(ipAddr, nodeIpAddr, object, counterName, objectInstance)
+	}
+
+}
+
