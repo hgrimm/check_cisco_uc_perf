@@ -21,6 +21,7 @@ General Public Licence (see http://www.fsf.org/licensing/licenses/gpl.txt).
 		Cisco Unified Communications Manager CUCM version 10.5.1.11901-1
  		Cisco Unified Communications Manager CUCM version 9.1.2.11900-12
  		Cisco Unified Communications Manager CUCM version 8.6.2.22900-9
+		Cisco Unified Communications Manager CUCM version 14
 
 # see also:
  		Cisco Unified Communications Manager XML Developers Guide, Release 9.0(1)
@@ -32,30 +33,39 @@ General Public Licence (see http://www.fsf.org/licensing/licenses/gpl.txt).
 		Version 0.3 (27.02.2015) General Public Licence added
 		Version 0.3.1 (27.02.2015) new flag -m maximum cache age in seconds and flag -a and flag -A Cisco AXL API version of AXL XML Namespace
 		Version 0.3.2 (27.02.2015) changed flag -H usage description
+		...
+		Version 0.8 (21.04.2021) XML data parsing largely reworked. New argument -C to define the cache file path and new argument -L to define the log filename.
 
 # Usage
-  -A="apiVersion": Cisco AXL API version of AXL XML Namespace
-  
-  -H="": AXL server IP address
-  
-  -N="": Node IP address
-  
-  -V=false: print plugin version
-  
-  -c="1": Critical threshold or threshold range
-  
-  -d=0: print debug, level: 1 errors only, 2 warnings and 3 informational messages
-  
-  -l=false: print PerfmonListCounter
-  
-  -m=180: maximum cache age in seconds
-  
-  -n="": Counter name
-  
-  -o="Memory": Perfmon object with optional tailing instance names in parenthesis
-  
-  -p="": password
-  
-  -u="": username
-  
-  -w="1": Warning threshold or threshold range
+
+  -A string
+        Cisco AXL API version of AXL XML Namespace (default "9.0")
+  -C string
+        Cache file path (default "/tmp/check_cisco_uc_perf/")
+  -H string
+        CUCM server IP address
+  -L string
+        Log file path and name (default "/var/log/check_cisco_uc_perf.log")
+  -M string
+        Comma separated list of nodes (IP addresses)
+  -N string
+        Node IP address
+  -V    print plugin version
+  -c string
+        Critical threshold or threshold range (default "1")
+  -d int
+        print debug, level: 1 errors only, 2 warnings and 3 informational messages
+  -l    print PerfmonListCounter
+  -m int
+        maximum cache age in seconds (default 180)
+  -n string
+        Counter name
+  -o string
+        Perfmon object with optional tailing instance names in parenthesis (default "Memory")
+  -p string
+        password
+  -u string
+        username
+  -w string
+        Warning threshold or threshold range (default "1")
+
